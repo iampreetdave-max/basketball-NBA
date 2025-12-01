@@ -175,6 +175,7 @@ print("\n[5/5] Compiling results...")
 results_df = pd.DataFrame()
 
 # Core columns - exact order as requested
+# Random 1 to 7 incrementer logic - same as original
 results_df['id'] = range(1, len(df) + 1)
 
 # Generate game_identifier
