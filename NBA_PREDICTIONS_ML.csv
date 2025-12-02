@@ -1,9 +1,7 @@
 id,date,league,game_identifier,home_id,home_team,away_id,away_team,home_points_predicted,home_points_actual,away_points_predicted,away_points_actual,total_points_predicted,total_points_actual,ml_prediction,ml_actual,ml_probability,home_win_odds,away_win_odds,ml_correct,ml_pnl,ml_confidence
-1,2025-12-02T00:00:00+00:00,NBA,2025-12-02_ATL@DET,nba_det,Detroit Pistons,nba_atl,Atlanta Hawks,122,,118,,239,,Home Win,,0.6978,1.26,4.0,,,68.41
-2,2025-12-02T00:00:00+00:00,NBA,2025-12-02_MIL@WSH,nba_wsh,Washington Wizards,nba_mil,Milwaukee Bucks,104,,116,,220,,Away Win,,0.0967,4.3,1.24,,,97.73
-3,2025-12-02T00:00:00+00:00,NBA,2025-12-02_CLE@IND,nba_ind,Indiana Pacers,nba_cle,Cleveland Cavaliers,116,,119,,235,,Away Win,,0.3307,2.8,1.46,,,60.76
-4,2025-12-02T00:30:00+00:00,NBA,2025-12-02_CHA@BKN,nba_bkn,Brooklyn Nets,nba_cha,Charlotte Hornets,111,,103,,214,,Home Win,,0.8305,2.7,1.49,,,92.0
-5,2025-12-02T00:30:00+00:00,NBA,2025-12-02_CHI@ORL,nba_orl,Orlando Magic,nba_chi,Chicago Bulls,116,,109,,225,,Home Win,,0.803,1.31,3.6,,,88.65
-6,2025-12-02T02:00:00+00:00,NBA,2025-12-02_DAL@DEN,nba_den,Denver Nuggets,nba_dal,Dallas Mavericks,114,,105,,219,,Home Win,,0.8447,1.22,4.5,,,93.46
-7,2025-12-02T02:00:00+00:00,NBA,2025-12-02_HOU@UTAH,nba_utah,Utah Jazz,nba_hou,Houston Rockets,109,,123,,232,,Away Win,,0.0643,5.55,1.16,,,99.06
-8,2025-12-02T03:00:00+00:00,NBA,2025-12-02_PHX@LAL,nba_lal,Los Angeles Lakers,nba_phx,Phoenix Suns,112,,109,,221,,Home Win,,0.6386,1.44,2.85,,,51.49
+1,2025-12-03T00:00:00+00:00,NBA,2025-12-03_WSH@PHI,nba_phi,Philadelphia 76ers,nba_wsh,Washington Wizards,115,,100,,215,,Home Win,,0.9553,1.15,5.9,,,99.56
+2,2025-12-03T00:30:00+00:00,NBA,2025-12-03_POR@TOR,nba_tor,Toronto Raptors,nba_por,Portland Trail Blazers,114,,111,,225,,Home Win,,0.6199,1.49,2.7,,,45.34
+3,2025-12-03T01:00:00+00:00,NBA,2025-12-03_NY@BOS,nba_bos,Boston Celtics,nba_ny,New York Knicks,111,,111,,223,,Away Win,,0.4858,1.89,1.93,,,5.68
+4,2025-12-03T01:00:00+00:00,NBA,2025-12-03_MIN@NO,nba_no,New Orleans Pelicans,nba_min,Minnesota Timberwolves,111,,118,,228,,Away Win,,0.1889,4.2,1.24,,,89.71
+5,2025-12-03T01:00:00+00:00,NBA,2025-12-03_MEM@SA,nba_sa,San Antonio Spurs,nba_mem,Memphis Grizzlies,117,,118,,235,,Away Win,,0.4444,1.49,2.7,,,21.98
+6,2025-12-03T04:00:00+00:00,NBA,2025-12-03_OKC@GS,nba_gs,Golden State Warriors,nba_okc,Oklahoma City Thunder,109,,123,,232,,Away Win,,0.0543,5.55,1.16,,,99.34
