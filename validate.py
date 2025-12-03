@@ -401,6 +401,7 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     print("-"*100)
     print(push_df.head(10).to_string(index=False))
     print("-"*100)
+    print()
     
     # Connect and push
     print("\n[CONNECTING] To database...")
