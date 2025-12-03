@@ -252,6 +252,14 @@ results_df['ml_pnl'] = None
 # Confidence and grade
 results_df['ml_confidence'] = pred_confidence.round(2)
 
+# Status (default PENDING for all predictions)
+results_df['status'] = 'PENDING'
+
+# Grade based on confidence
+results_df['grade'] = results_df['ml_confidence'].apply(lambda x: 
+    'B' if x >= 95 else 'A' if x >= 75 else 'C' if x >= 35 else 'D'
+)
+
 # Reorder columns to match exact requested order
 final_columns = [
     'id', 'date', 'league', 'game_identifier', 'home_id', 'home_team', 'away_id', 'away_team',
@@ -261,7 +269,7 @@ final_columns = [
     'ml_prediction', 'ml_actual', 'ml_probability',
     'home_win_odds', 'away_win_odds',
     'ml_correct', 'ml_pnl',
-    'ml_confidence'
+    'ml_confidence', 'status', 'grade'
 ]
 
 results_df = results_df[final_columns]
@@ -309,8 +317,8 @@ print("="*80)
 print("\n📋 SAMPLE PREDICTIONS (first 10 games):")
 print("-"*80)
 display_cols = ['home_team', 'away_team', 'home_points_predicted', 'away_points_predicted', 
-                'total_points_predicted', 'ml_prediction', 'ml_probability', 'ml_confidence', 
-                'home_win_odds', 'away_win_odds']
+                'total_points_predicted', 'ml_prediction', 'ml_probability', 'ml_confidence',
+                'status', 'grade', 'home_win_odds', 'away_win_odds']
 
 if 'ml_actual' in results_df.columns:
     display_cols.extend(['ml_actual', 'ml_correct', 'ml_pnl'])
