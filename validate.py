@@ -402,12 +402,6 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     print(push_df.head(10).to_string(index=False))
     print("-"*100)
     
-    # Ask for confirmation
-    confirmation = input("\n⚠️  Proceed with pushing {0} records to database? (yes/no): ".format(len(push_df))).strip().lower()
-    if confirmation not in ['yes', 'y']:
-        print("✗ Operation cancelled by user")
-        return
-    
     # Connect and push
     print("\n[CONNECTING] To database...")
     try:
