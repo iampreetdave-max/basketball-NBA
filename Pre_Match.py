@@ -56,7 +56,7 @@ TEAM_ALIASES = {
 
 # API Configuration
 API_KEYS = [
-    "jdP3cFD34Ox128KeOzk1QO80WKPYoh8ZKzjLeL0H",
+    "fFdak1w9shF9hQVZOTaFEPBvRFw2ONSo8hfduCBI",
     "yaVs9ag9ZV7B011YWcbOFuszgN5bdeTai5r8eVWi",
     "7iXdsTMLsQpiFV6f1aWUak0BOoYrmuAf4YD99oVE",
     "dfgSQXX31W4efJ2Nqq71E35eVbtRBth8BYtHRYPc",
@@ -635,4 +635,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
