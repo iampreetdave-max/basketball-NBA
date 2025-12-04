@@ -115,8 +115,8 @@ def calculate_ml_correct(predicted_winner, actual_winner):
     Calculate if moneyline prediction was correct.
     
     Args:
-        predicted_winner: str - "HOME WIN" or "AWAY WIN"
-        actual_winner: str - "HOME WIN" or "AWAY WIN"
+        predicted_winner: str - "Home Win" or "Away Win"
+        actual_winner: str - "Home Win" or "Away Win"
     
     Returns:
         int - 1 if correct, 0 if incorrect
@@ -136,7 +136,7 @@ def determine_ml_actual(home_points, away_points):
         away_points: int - away team actual points
     
     Returns:
-        str - "HOME WIN" or "AWAY WIN"
+        str - "Home Win" or "Away Win"
     """
     if home_points is None or away_points is None:
         return None
@@ -144,7 +144,7 @@ def determine_ml_actual(home_points, away_points):
     try:
         h_pts = int(home_points)
         a_pts = int(away_points)
-        return "HOME WIN" if h_pts > a_pts else "AWAY WIN"
+        return "Home Win" if h_pts > a_pts else "Away Win"
     except (ValueError, TypeError):
         return None
 
@@ -350,9 +350,9 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
         away_odds = row.get('away_win_odds')
         
         if pd.notna(home_odds) and pd.notna(away_odds):
-            if predicted == 'HOME WIN':
+            if predicted == 'Home Win':
                 return home_odds
-            elif predicted == 'AWAY WIN':
+            elif predicted == 'Away Win':
                 return away_odds
         return None
     
