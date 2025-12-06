@@ -14,8 +14,8 @@ DB_CONFIG = {
 TABLE_NAME = 'agility_NBA_b1'
 CSV_FILE = 'NBA_PREDICTIONS_ML.csv'
 
-# Columns to extract and push
-COLUMNS_TO_PUSH = [
+# Columns from CSV to extract
+CSV_COLUMNS = [
     'date',
     'league',
     'game_identifier',
@@ -32,8 +32,16 @@ COLUMNS_TO_PUSH = [
     'away_win_odds',
     'ml_confidence',
     'status',
-    'grade'
+    'grade',
+    'total_line_o',
+    'ou_correct'
 ]
+
+# Column mapping: CSV column -> Database column (use same name if not mapped)
+COLUMN_MAPPING = {
+    'total_line_o': 'market_total_line',
+    'ou_correct': 'ou_correct'
+}
 
 def push_data():
     """Read CSV and push selected columns to database"""
@@ -44,8 +52,8 @@ def push_data():
         print(f"✓ Loaded {len(df)} rows from CSV")
         
         # Select only required columns
-        df = df[COLUMNS_TO_PUSH]
-        print(f"✓ Selected {len(COLUMNS_TO_PUSH)} columns")
+        df = df[CSV_COLUMNS]
+        print(f"✓ Selected {len(CSV_COLUMNS)} columns")
         
         # Connect to database
         print("Connecting to PostgreSQL...")
@@ -55,19 +63,22 @@ def push_data():
         # Insert data
         with connection.cursor() as cursor:
             for index, row in df.iterrows():
-                # Build dynamic INSERT query with column names
-                columns = ', '.join(COLUMNS_TO_PUSH)
-                placeholders = ', '.join(['%s'] * len(COLUMNS_TO_PUSH))
+                # Map CSV column names to database column names
+                db_columns = [COLUMN_MAPPING.get(col, col) for col in CSV_COLUMNS]
+                
+                # Build dynamic INSERT query with mapped column names
+                columns = ', '.join(db_columns)
+                placeholders = ', '.join(['%s'] * len(CSV_COLUMNS))
                 
                 insert_query = f"""
                 INSERT INTO {TABLE_NAME} ({columns})
                 VALUES ({placeholders})
                 """
                 
-                # Handle NaN values as None for NULL insertion, preserving column order
+                # Handle NaN values as None for NULL insertion, preserving CSV column order
                 values = tuple(
                     None if pd.isna(row[col]) else row[col]
-                    for col in COLUMNS_TO_PUSH
+                    for col in CSV_COLUMNS
                 )
                 
                 cursor.execute(insert_query, values)
