@@ -180,6 +180,37 @@ def calculate_ml_pnl(ml_correct, moneyline_odds):
         return None
 
 
+def calculate_ou_correct(total_actual, market_total_line):
+    """
+    Calculate if over/under prediction was correct.
+    
+    Logic:
+    - If total_actual > market_total_line: return "OVER"
+    - If total_actual < market_total_line: return "UNDER"
+    - If total_actual == market_total_line: return None (push)
+    
+    Args:
+        total_actual: float or int - actual total points
+        market_total_line: float or int - the market total line
+    
+    Returns:
+        str - "OVER" or "UNDER" or None
+    """
+    if pd.notna(total_actual) and pd.notna(market_total_line):
+        try:
+            t_actual = float(total_actual)
+            t_line = float(market_total_line)
+            
+            if t_actual > t_line:
+                return "OVER"
+            elif t_actual < t_line:
+                return "UNDER"
+        except (ValueError, TypeError):
+            pass
+    
+    return None
+
+
 def determine_status(home_points_actual, away_points_actual):
     """
     Determine game status based on actual points.
@@ -208,8 +239,9 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     2. Read prematch features CSV to get match_ids
     3. Fetch actual game data from Sportradar
     4. Calculate ml_actual, ml_correct, ml_pnl
-    5. Update status based on whether actual data exists
-    6. Push to database
+    5. Calculate ou_correct
+    6. Update status based on whether actual data exists
+    7. Push to database
     """
     
     print("\n" + "="*100)
@@ -364,6 +396,12 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
         axis=1
     )
     
+    # Calculate OU correctness based on market total line
+    df_validation['ou_correct'] = df_validation.apply(
+        lambda row: calculate_ou_correct(row['total_points_actual'], row['total_line_o']),
+        axis=1
+    )
+    
     # Determine status based on actual points
     df_validation['status'] = df_validation.apply(
         lambda row: determine_status(row['home_points_actual'], row['away_points_actual']),
@@ -401,7 +439,7 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     
     sample_cols = [
         'game_identifier', 'ml_prediction', 'ml_actual', 'ml_correct',
-        'home_points_actual', 'away_points_actual', 'total_points_actual', 'ml_pnl', 'status'
+        'home_points_actual', 'away_points_actual', 'total_points_actual', 'ou_correct', 'ml_pnl', 'status'
     ]
     available_cols = [col for col in sample_cols if col in df_validation.columns]
     
@@ -422,6 +460,7 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
         'ml_actual',
         'ml_correct',
         'ml_pnl',
+        'ou_correct',
         'status'
     ]].copy()
     
@@ -465,6 +504,7 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
                 ml_actual = %s,
                 ml_correct = %s,
                 ml_pnl = %s,
+                ou_correct = %s,
                 status = %s
             WHERE game_identifier = %s
             """
@@ -476,6 +516,7 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
                 row['ml_actual'],
                 bool(int(row['ml_correct'])) if pd.notna(row['ml_correct']) else None,
                 float(row['ml_pnl']) if pd.notna(row['ml_pnl']) else None,
+                row['ou_correct'],
                 row['status'],
                 game_id
             ))
