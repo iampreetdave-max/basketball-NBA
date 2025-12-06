@@ -186,7 +186,7 @@ else:
     results_df['game_identifier'] = results_df['id'].astype(str) + '_' + (df['game_date'].astype(str) if 'game_date' in df.columns else pd.Series(index=df.index, dtype=str))
 
 # Generate team IDs as league_teamalias format
-league = (df['league'].values if 'league' in df.columns else 'NBA').lower()
+league = (df['league'].iloc[0] if 'league' in df.columns else 'NBA').lower()
 
 home_team_ids = []
 away_team_ids = []
@@ -378,5 +378,6 @@ if 'ou_actual' in results_df.columns:
 
 print(results_df[display_cols].head(10).to_string(index=False))
 print("-"*80)
+
 
 
