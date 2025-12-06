@@ -74,7 +74,7 @@ except FileNotFoundError as e:
 print("\n[2/5] Loading data...")
 
 try:
-    df = pd.read_csv('NBA_PREDICTIONS_ML.csv', on_bad_lines='skip')
+    df = pd.read_csv('Future.csv', on_bad_lines='skip')
 except:
     try:
         df = pd.read_csv('/content/NBANBA.csv', on_bad_lines='skip')
@@ -378,4 +378,5 @@ if 'ou_actual' in results_df.columns:
 
 print(results_df[display_cols].head(10).to_string(index=False))
 print("-"*80)
+
 
