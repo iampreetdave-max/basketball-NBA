@@ -1,7 +1,8 @@
 """
-Merge Pre_Match CSV and Future_Check CSV
-Combines pre-match features with betting odds
+Merge Pre_Match CSV and Odds CSV
+Combines pre-match features with betting odds (spreads and totals from multiple sources)
 Outputs to Future.csv with optimized column ordering
+Note: Keeps both total_line (source 1) and total_line_o (DraftKings) for comparison
 """
 
 import pandas as pd
@@ -83,13 +84,42 @@ def merge_csvs(prematch_file: str, odds_file: str, output_file: str = "Future.cs
         odds_columns_to_extract.append('total_line')
         print("✓ Found total_line")
     
+    # New spread columns with updated names
+    if 'home_spread' in df_odds.columns:
+        odds_columns_to_extract.append('home_spread')
+        print("✓ Found home_spread")
+    
+    if 'away_spread' in df_odds.columns:
+        odds_columns_to_extract.append('away_spread')
+        print("✓ Found away_spread")
+    
+    if 'home_spread_odds_decimal' in df_odds.columns:
+        odds_columns_to_extract.append('home_spread_odds_decimal')
+        print("✓ Found home_spread_odds_decimal")
+    
+    if 'away_spread_odds_decimal' in df_odds.columns:
+        odds_columns_to_extract.append('away_spread_odds_decimal')
+        print("✓ Found away_spread_odds_decimal")
+    
+    if 'total_line_o' in df_odds.columns:
+        odds_columns_to_extract.append('total_line_o')
+        print("✓ Found total_line_o")
+    
+    if 'total_line_over_odds_decimal' in df_odds.columns:
+        odds_columns_to_extract.append('total_line_over_odds_decimal')
+        print("✓ Found total_line_over_odds_decimal")
+    
+    if 'total_line_under_odds_decimal' in df_odds.columns:
+        odds_columns_to_extract.append('total_line_under_odds_decimal')
+        print("✓ Found total_line_under_odds_decimal")
+    
     # Extract only needed columns
     df_odds_subset = df_odds[odds_columns_to_extract].copy()
     
     # Rename columns
     df_odds_subset.rename(columns=column_rename_map, inplace=True)
     
-    print(f"\n✓ Extracting columns: {list(df_odds_subset.columns)}")
+    print(f"\n✓ Extracting {len(odds_columns_to_extract) - 1} odds columns")
     
     # Step 4: Merge DataFrames
     print(f"\n{'='*80}")
@@ -104,8 +134,19 @@ def merge_csvs(prematch_file: str, odds_file: str, output_file: str = "Future.cs
     )
     
     print(f"✓ Merged on 'game_identifier'")
-    print(f"  Games with odds: {df_merged['home_winning_odds_decimal'].notna().sum()}")
-    print(f"  Games without odds: {df_merged['home_winning_odds_decimal'].isna().sum()}")
+    print(f"  Total games: {len(df_merged)}")
+    
+    if 'home_winning_odds_decimal' in df_merged.columns:
+        print(f"  Games with moneyline odds: {df_merged['home_winning_odds_decimal'].notna().sum()}")
+    
+    if 'home_spread' in df_merged.columns:
+        print(f"  Games with spreads: {df_merged['home_spread'].notna().sum()}")
+    
+    if 'total_line' in df_merged.columns:
+        print(f"  Games with total_line (source 1): {df_merged['total_line'].notna().sum()}")
+    
+    if 'total_line_o' in df_merged.columns:
+        print(f"  Games with total_line_o (DraftKings): {df_merged['total_line_o'].notna().sum()}")
     
     # Step 5: Reorganize columns
     print(f"\n{'='*80}")
@@ -120,7 +161,13 @@ def merge_csvs(prematch_file: str, odds_file: str, output_file: str = "Future.cs
     ]
     
     # Betting odds columns (at the end)
-    odds_cols = ['home_winning_odds_decimal', 'away_winning_odds_decimal', 'total_line']
+    odds_cols = [
+        'home_winning_odds_decimal', 'away_winning_odds_decimal',
+        'home_spread', 'away_spread',
+        'home_spread_odds_decimal', 'away_spread_odds_decimal',
+        'total_line', 'total_line_o',
+        'total_line_over_odds_decimal', 'total_line_under_odds_decimal'
+    ]
     
     # Build final column order
     final_col_order = []
@@ -166,21 +213,46 @@ def merge_csvs(prematch_file: str, odds_file: str, output_file: str = "Future.cs
     print(f"Pre-Match games: {len(df_prematch)}")
     print(f"Odds games: {len(df_odds)}")
     print(f"Merged games: {len(df_merged)}")
+    
     print(f"\nMatch results:")
-    print(f"  Games matched with odds: {df_merged['home_winning_odds_decimal'].notna().sum()}")
-    print(f"  Games without odds: {df_merged['home_winning_odds_decimal'].isna().sum()}")
-    print(f"  Match rate: {(df_merged['home_winning_odds_decimal'].notna().sum() / len(df_merged) * 100):.1f}%")
+    if 'home_winning_odds_decimal' in df_merged.columns:
+        matched_moneyline = df_merged['home_winning_odds_decimal'].notna().sum()
+        print(f"  Games with moneyline: {matched_moneyline}")
+    
+    if 'home_spread' in df_merged.columns:
+        matched_spreads = df_merged['home_spread'].notna().sum()
+        print(f"  Games with spreads: {matched_spreads}")
+    
+    if 'total_line' in df_merged.columns:
+        matched_total_1 = df_merged['total_line'].notna().sum()
+        print(f"  Games with total_line (source 1): {matched_total_1}")
+    
+    if 'total_line_o' in df_merged.columns:
+        matched_totals = df_merged['total_line_o'].notna().sum()
+        print(f"  Games with total_line_o (DraftKings): {matched_totals}")
     
     # Show odds statistics
-    if df_merged['home_winning_odds_decimal'].notna().sum() > 0:
-        print(f"\nOdds statistics (matched games):")
-        print(f"  Home odds: {df_merged['home_winning_odds_decimal'].min():.2f} - {df_merged['home_winning_odds_decimal'].max():.2f}")
-        print(f"  Away odds: {df_merged['away_winning_odds_decimal'].min():.2f} - {df_merged['away_winning_odds_decimal'].max():.2f}")
-        
-        if 'total_line' in df_merged.columns:
-            total_notna = df_merged['total_line'].notna().sum()
-            if total_notna > 0:
-                print(f"  Total line: {df_merged['total_line'].min():.1f} - {df_merged['total_line'].max():.1f}")
+    print(f"\nOdds statistics:")
+    
+    if 'home_winning_odds_decimal' in df_merged.columns and df_merged['home_winning_odds_decimal'].notna().sum() > 0:
+        print(f"  Moneyline:")
+        print(f"    Home odds: {df_merged['home_winning_odds_decimal'].min():.2f} - {df_merged['home_winning_odds_decimal'].max():.2f}")
+        print(f"    Away odds: {df_merged['away_winning_odds_decimal'].min():.2f} - {df_merged['away_winning_odds_decimal'].max():.2f}")
+    
+    if 'home_spread' in df_merged.columns and df_merged['home_spread'].notna().sum() > 0:
+        print(f"  Spreads:")
+        print(f"    Home points: {df_merged['home_spread'].min():.1f} to {df_merged['home_spread'].max():.1f}")
+        print(f"    Home prices: {df_merged['home_spread_odds_decimal'].min():.2f} - {df_merged['home_spread_odds_decimal'].max():.2f}")
+    
+    if 'total_line' in df_merged.columns and df_merged['total_line'].notna().sum() > 0:
+        print(f"  Total Line (Source 1):")
+        print(f"    Line: {df_merged['total_line'].min():.1f} - {df_merged['total_line'].max():.1f}")
+    
+    if 'total_line_o' in df_merged.columns and df_merged['total_line_o'].notna().sum() > 0:
+        print(f"  Totals (DraftKings):")
+        print(f"    Line: {df_merged['total_line_o'].min():.1f} - {df_merged['total_line_o'].max():.1f}")
+        print(f"    Over prices: {df_merged['total_line_over_odds_decimal'].min():.2f} - {df_merged['total_line_over_odds_decimal'].max():.2f}")
+        print(f"    Under prices: {df_merged['total_line_under_odds_decimal'].min():.2f} - {df_merged['total_line_under_odds_decimal'].max():.2f}")
     
     # Step 8: Show sample
     print(f"\n{'='*80}")
@@ -189,7 +261,9 @@ def merge_csvs(prematch_file: str, odds_file: str, output_file: str = "Future.cs
     
     sample_cols = [
         'game_identifier', 'home_alias', 'away_alias',
-        'home_winning_odds_decimal', 'away_winning_odds_decimal', 'total_line'
+        'home_spread', 'home_spread_odds_decimal',
+        'away_spread', 'away_spread_odds_decimal',
+        'total_line', 'total_line_o', 'total_line_over_odds_decimal', 'total_line_under_odds_decimal'
     ]
     
     available_sample_cols = [c for c in sample_cols if c in df_merged.columns]
@@ -198,6 +272,17 @@ def merge_csvs(prematch_file: str, odds_file: str, output_file: str = "Future.cs
         print(df_merged[available_sample_cols].head(3).to_string(index=False))
     
     print(f"\n{'='*80}")
+    print("ODDS COLUMNS IN OUTPUT")
+    print(f"{'='*80}")
+    print("✓ home_spread                   - Home team spread points (DraftKings)")
+    print("✓ away_spread                   - Away team spread points (DraftKings)")
+    print("✓ home_spread_odds_decimal      - Home team spread price (DraftKings)")
+    print("✓ away_spread_odds_decimal      - Away team spread price (DraftKings)")
+    print("✓ total_line                    - Total points line (Source 1)")
+    print("✓ total_line_o                  - Total points line (DraftKings)")
+    print("✓ total_line_over_odds_decimal  - Over total price (DraftKings)")
+    print("✓ total_line_under_odds_decimal - Under total price (DraftKings)")
+    print(f"{'='*80}\n")
     print("✓ COMPLETE!")
     print(f"{'='*80}\n")
 
@@ -206,7 +291,7 @@ def main():
     """Main execution - fully automated, no user interaction"""
     
     print("\n" + "="*80)
-    print("CSV MERGE UTILITY - Pre_Match + Future_Check")
+    print("CSV MERGE UTILITY - Pre_Match + Odds (Spreads & Totals from Multiple Sources)")
     print("="*80)
     
     # FULLY AUTOMATED: Use default file paths
