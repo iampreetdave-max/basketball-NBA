@@ -1,6 +1,7 @@
 """
 Fetch DraftKings Decimal Odds for UPCOMING NBA Matches
 Uses The Odds API v4
+Extracts Spreads and Totals with proper structure
 """
 
 import requests
@@ -91,7 +92,7 @@ class OddsAPIClient:
         params = {
             "apiKey": self._get_current_api_key(),
             "regions": "us",
-            "markets": "h2h,totals",
+            "markets": "h2h,spreads,totals",
             "oddsFormat": "decimal",
             "bookmakers": "draftkings"
         }
@@ -133,9 +134,9 @@ class OddsAPIClient:
 
 
 def extract_draftkings_odds(games):
-    """Extract DraftKings decimal odds from games"""
+    """Extract DraftKings decimal odds and spreads from games"""
     print(f"{'='*80}")
-    print(f"EXTRACTING DRAFTKINGS DECIMAL ODDS")
+    print(f"EXTRACTING DRAFTKINGS ODDS & SPREADS")
     print(f"{'='*80}\n")
     
     odds_list = []
@@ -157,6 +158,13 @@ def extract_draftkings_odds(games):
             'home_team': home_team,
             'away_team': away_team,
             'status': 'upcoming',
+            'home_spread': None,
+            'away_spread': None,
+            'home_spread_odds_decimal': None,
+            'away_spread_odds_decimal': None,
+            'total_line_o': None,
+            'total_line_over_odds_decimal': None,
+            'total_line_under_odds_decimal': None,
         }
         
         # Find DraftKings bookmaker
@@ -189,6 +197,20 @@ def extract_draftkings_odds(games):
                     elif name == away_team and odds_decimal:
                         game_odds['away_winning_odds_decimal'] = odds_decimal
             
+            # Spreads
+            elif market_key == 'spreads':
+                for outcome in outcomes:
+                    name = outcome.get('name')
+                    odds_decimal = outcome.get('price')
+                    point = outcome.get('point')
+                    
+                    if name == home_team and odds_decimal and point is not None:
+                        game_odds['home_spread'] = point
+                        game_odds['home_spread_odds_decimal'] = odds_decimal
+                    elif name == away_team and odds_decimal and point is not None:
+                        game_odds['away_spread'] = point
+                        game_odds['away_spread_odds_decimal'] = odds_decimal
+            
             # Totals (over/under)
             elif market_key == 'totals':
                 for outcome in outcomes:
@@ -197,13 +219,13 @@ def extract_draftkings_odds(games):
                     point = outcome.get('point')
                     
                     if name == 'Over' and odds_decimal:
-                        game_odds['over_odds_decimal'] = odds_decimal
-                        if point:
-                            game_odds['total_line'] = point
+                        game_odds['total_line_over_odds_decimal'] = odds_decimal
+                        if point is not None:
+                            game_odds['total_line_o'] = point
                     elif name == 'Under' and odds_decimal:
-                        game_odds['under_odds_decimal'] = odds_decimal
+                        game_odds['total_line_under_odds_decimal'] = odds_decimal
         
-        if len(game_odds) > 6:  # Has more than just basic info
+        if draftkings_data:  # Has DraftKings data
             odds_list.append(game_odds)
     
     print(f"✓ Extracted {len(odds_list)} games with DraftKings odds\n")
@@ -212,7 +234,7 @@ def extract_draftkings_odds(games):
 
 def main():
     print("\n" + "="*80)
-    print("THE ODDS API - UPCOMING NBA DRAFTKINGS ODDS")
+    print("THE ODDS API - UPCOMING NBA DRAFTKINGS ODDS & SPREADS")
     print("="*80)
     print(f"API keys available: {len(API_KEYS)}")
     print(f"Rate limit threshold: {RATE_LIMIT_THRESHOLD} consecutive hits")
@@ -244,7 +266,9 @@ def main():
     # Convert odds columns to numeric
     odds_columns = [
         'home_winning_odds_decimal', 'away_winning_odds_decimal',
-        'over_odds_decimal', 'under_odds_decimal', 'total_line'
+        'home_spread', 'away_spread',
+        'home_spread_odds_decimal', 'away_spread_odds_decimal',
+        'total_line_o', 'total_line_over_odds_decimal', 'total_line_under_odds_decimal'
     ]
     for col in odds_columns:
         if col in df_odds.columns:
@@ -264,10 +288,11 @@ def main():
     print(f"{'='*80}\n")
     
     sample_cols = [
-        'game_identifier', 'date', 'start_time',
+        'game_identifier', 'date',
         'home_team', 'away_team',
-        'home_winning_odds_decimal', 'away_winning_odds_decimal',
-        'total_line', 'over_odds_decimal', 'under_odds_decimal'
+        'home_spread', 'home_spread_odds_decimal',
+        'away_spread', 'away_spread_odds_decimal',
+        'total_line_o', 'total_line_over_odds_decimal', 'total_line_under_odds_decimal'
     ]
     
     available_cols = [c for c in sample_cols if c in df_odds.columns]
@@ -282,22 +307,29 @@ def main():
     
     print(f"Total upcoming NBA games with DraftKings odds: {len(df_odds)}")
     print(f"\nOdds availability:")
-    print(f"  Home winning: {df_odds['home_winning_odds_decimal'].notna().sum()}")
-    print(f"  Away winning: {df_odds['away_winning_odds_decimal'].notna().sum()}")
-    print(f"  Over: {df_odds['over_odds_decimal'].notna().sum()}")
-    print(f"  Under: {df_odds['under_odds_decimal'].notna().sum()}")
+    print(f"  Home spread_odds_decimal: {df_odds['home_spread_odds_decimal'].notna().sum()}")
+    print(f"  Away spread_odds_decimal: {df_odds['away_spread_odds_decimal'].notna().sum()}")
+    print(f"  Total over: {df_odds['total_line_over_odds_decimal'].notna().sum()}")
+    print(f"  Total under: {df_odds['total_line_under_odds_decimal'].notna().sum()}")
     
-    if df_odds['home_winning_odds_decimal'].notna().sum() > 0:
-        print(f"\nOdds ranges:")
-        print(f"  Home: {df_odds['home_winning_odds_decimal'].min():.2f} - {df_odds['home_winning_odds_decimal'].max():.2f}")
-        print(f"  Away: {df_odds['away_winning_odds_decimal'].min():.2f} - {df_odds['away_winning_odds_decimal'].max():.2f}")
+    print(f"\nSpread ranges:")
+    if df_odds['home_spread'].notna().sum() > 0:
+        print(f"  Home spread: {df_odds['home_spread'].min():.1f} to {df_odds['home_spread'].max():.1f}")
+        print(f"  Away spread: {df_odds['away_spread'].min():.1f} to {df_odds['away_spread'].max():.1f}")
     
-    if df_odds['over_odds_decimal'].notna().sum() > 0:
-        print(f"  Over: {df_odds['over_odds_decimal'].min():.2f} - {df_odds['over_odds_decimal'].max():.2f}")
-        print(f"  Under: {df_odds['under_odds_decimal'].min():.2f} - {df_odds['under_odds_decimal'].max():.2f}")
+    if df_odds['total_line_o'].notna().sum() > 0:
+        print(f"  Total line: {df_odds['total_line_o'].min():.1f} to {df_odds['total_line_o'].max():.1f}")
     
     print(f"\n{'='*80}")
-    print("✓ COMPLETE!")
+    print("✓ COLUMNS EXTRACTED:")
+    print(f"{'='*80}")
+    print("✓ home_spread                        - Home team spread points")
+    print("✓ away_spread                        - Away team spread points")
+    print("✓ home_spread_odds_decimal           - Home team spread price (decimal odds)")
+    print("✓ away_spread_odds_decimal           - Away team spread price (decimal odds)")
+    print("✓ total_line_o                       - Total points line")
+    print("✓ total_line_over_odds_decimal       - Over total price (decimal odds)")
+    print("✓ total_line_under_odds_decimal      - Under total price (decimal odds)")
     print(f"{'='*80}\n")
 
 
