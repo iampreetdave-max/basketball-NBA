@@ -1,7 +1,6 @@
 import psycopg2
 import pandas as pd
 from psycopg2 import sql
-
 # Database configuration
 DB_CONFIG = {
     'host': 'winbets-predictions.postgres.database.azure.com',
@@ -10,10 +9,8 @@ DB_CONFIG = {
     'user': 'winbets',
     'password': 'Constantinople@1900'
 }
-
 TABLE_NAME = 'agility_NBA_b1'
 CSV_FILE = 'NBA_PREDICTIONS_ML.csv'
-
 # Columns from CSV to extract
 CSV_COLUMNS = [
     'date',
@@ -34,15 +31,14 @@ CSV_COLUMNS = [
     'status',
     'grade',
     'total_line_o',
+    'ou_predicted',
     'ou_correct'
 ]
-
 # Column mapping: CSV column -> Database column (use same name if not mapped)
 COLUMN_MAPPING = {
     'total_line_o': 'market_total_line',
     'ou_correct': 'ou_correct'
 }
-
 def push_data():
     """Read CSV and push selected columns to database"""
     try:
@@ -108,6 +104,5 @@ def push_data():
     except Exception as e:
         print(f"✗ Fatal error: {e}")
         raise
-
 if __name__ == "__main__":
     push_data()
