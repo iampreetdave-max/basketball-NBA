@@ -14,9 +14,8 @@ DB_CONFIG = {
 TABLE_NAME = 'agility_nba_b1'
 CSV_FILE = 'NBA_PREDICTIONS_ML.csv'
 
-# All columns from generated CSV (in order)
+# All columns from generated CSV (excluding id)
 CSV_COLUMNS = [
-    'id',
     'date',
     'league',
     'game_identifier',
@@ -43,7 +42,6 @@ CSV_COLUMNS = [
     'market_total_line',
     'ou_predicted',
     'ou_correct',
-    'ou_pnl',
     'home_spread',
     'away_spread',
     'home_spread_odds',
@@ -51,6 +49,7 @@ CSV_COLUMNS = [
     'over_odds',
     'under_odds',
     'spread_pnl',
+    'ou_pnl',
     'spread_covered_predicted',
     'spread_covered_actual'
 ]
