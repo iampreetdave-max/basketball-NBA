@@ -1,8 +1,8 @@
 game_identifier,date,start_time,home_team,away_team,status,home_spread,away_spread,home_spread_odds_decimal,away_spread_odds_decimal,total_line_o,total_line_over_odds_decimal,total_line_under_odds_decimal,home_winning_odds_decimal,away_winning_odds_decimal
-2025-12-09_SAC@IND,2025-12-09,2025-12-09T00:10:00Z,Indiana Pacers,Sacramento Kings,upcoming,-3.5,3.5,1.87,1.95,234.5,1.93,1.89,1.6,2.4
-2025-12-09_PHX@MIN,2025-12-09,2025-12-09T00:40:00Z,Minnesota Timberwolves,Phoenix Suns,upcoming,-9.5,9.5,1.91,1.91,226.5,1.89,1.93,1.25,4.1
-2025-12-09_SA@NO,2025-12-09,2025-12-09T01:10:00Z,New Orleans Pelicans,San Antonio Spurs,upcoming,9.5,-9.5,1.91,1.91,236.5,1.91,1.91,4.0,1.26
-2025-12-09_MIA@ORL,2025-12-09,2025-12-09T23:10:00Z,Orlando Magic,Miami Heat,upcoming,-1.5,1.5,1.98,1.85,238.5,1.95,1.87,1.89,1.93
-2025-12-10_NY@TOR,2025-12-10,2025-12-10T01:30:00Z,Toronto Raptors,New York Knicks,upcoming,3.5,-3.5,1.93,1.89,231.5,1.91,1.91,2.42,1.59
+2025-12-09_SAC@IND,2025-12-09,2025-12-09T00:10:00Z,Indiana Pacers,Sacramento Kings,upcoming,-3.5,3.5,1.87,1.95,235.5,1.93,1.89,1.59,2.42
+2025-12-09_PHX@MIN,2025-12-09,2025-12-09T00:40:00Z,Minnesota Timberwolves,Phoenix Suns,upcoming,-9.5,9.5,1.87,1.95,226.5,1.91,1.91,1.24,4.3
+2025-12-09_SA@NO,2025-12-09,2025-12-09T01:10:00Z,New Orleans Pelicans,San Antonio Spurs,upcoming,9.5,-9.5,1.95,1.87,236.5,1.93,1.89,4.3,1.24
+2025-12-09_MIA@ORL,2025-12-09,2025-12-09T23:10:00Z,Orlando Magic,Miami Heat,upcoming,1.5,-1.5,1.87,1.95,238.5,1.95,1.87,1.95,1.87
+2025-12-10_NY@TOR,2025-12-10,2025-12-10T01:30:00Z,Toronto Raptors,New York Knicks,upcoming,4.5,-4.5,1.87,1.95,231.5,1.91,1.91,2.4,1.6
 2025-12-11_PHX@OKC,2025-12-11,2025-12-11T00:30:00Z,Oklahoma City Thunder,Phoenix Suns,upcoming,-15.5,15.5,1.87,1.95,224.5,1.91,1.91,1.08,8.5
-2025-12-11_SA@LAL,2025-12-11,2025-12-11T03:00:00Z,Los Angeles Lakers,San Antonio Spurs,upcoming,-3.5,3.5,1.87,1.95,234.5,1.87,1.95,1.59,2.42
+2025-12-11_SA@LAL,2025-12-11,2025-12-11T03:00:00Z,Los Angeles Lakers,San Antonio Spurs,upcoming,-3.5,3.5,1.87,1.95,234.5,1.87,1.95,1.57,2.45
