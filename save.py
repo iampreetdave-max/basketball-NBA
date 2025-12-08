@@ -1,6 +1,7 @@
 import psycopg2
 import pandas as pd
 from psycopg2 import sql
+
 # Database configuration
 DB_CONFIG = {
     'host': 'winbets-predictions.postgres.database.azure.com',
@@ -9,10 +10,13 @@ DB_CONFIG = {
     'user': 'winbets',
     'password': 'Constantinople@1900'
 }
-TABLE_NAME = 'agility_NBA_b1'
+
+TABLE_NAME = 'agility_nba_b1'
 CSV_FILE = 'NBA_PREDICTIONS_ML.csv'
-# Columns from CSV to extract
+
+# All columns from generated CSV (in order)
 CSV_COLUMNS = [
+    'id',
     'date',
     'league',
     'game_identifier',
@@ -21,27 +25,44 @@ CSV_COLUMNS = [
     'away_id',
     'away_team',
     'home_points_predicted',
+    'home_points_actual',
     'away_points_predicted',
+    'away_points_actual',
     'total_points_predicted',
+    'total_points_actual',
     'ml_prediction',
+    'ml_actual',
     'ml_probability',
     'home_win_odds',
     'away_win_odds',
+    'ml_correct',
+    'ml_pnl',
     'ml_confidence',
     'status',
     'grade',
-    'total_line_o',
+    'market_total_line',
     'ou_predicted',
     'ou_correct',
-    'spreads_covered_predicted'
+    'ou_pnl',
+    'home_spread',
+    'away_spread',
+    'home_spread_odds',
+    'away_spread_odds',
+    'over_odds',
+    'under_odds',
+    'spread_pnl',
+    'spread_covered_predicted',
+    'spread_covered_actual'
 ]
-# Column mapping: CSV column -> Database column (use same name if not mapped)
+
+# Column mapping: CSV column -> Database column
+# Since CSV and database use same names, no mapping needed (1:1)
 COLUMN_MAPPING = {
-    'total_line_o': 'market_total_line',
-    'ou_correct': 'ou_correct'
+    # CSV_column: database_column (same for all - direct mapping)
 }
+
 def push_data():
-    """Read CSV and push selected columns to database"""
+    """Read CSV and push all columns to database"""
     try:
         # Read CSV
         print(f"Reading {CSV_FILE}...")
@@ -60,7 +81,7 @@ def push_data():
         # Insert data
         with connection.cursor() as cursor:
             for index, row in df.iterrows():
-                # Map CSV column names to database column names
+                # Map CSV column names to database column names (direct mapping - same names)
                 db_columns = [COLUMN_MAPPING.get(col, col) for col in CSV_COLUMNS]
                 
                 # Build dynamic INSERT query with mapped column names
@@ -105,5 +126,6 @@ def push_data():
     except Exception as e:
         print(f"✗ Fatal error: {e}")
         raise
+
 if __name__ == "__main__":
     push_data()
