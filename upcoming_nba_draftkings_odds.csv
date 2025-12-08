@@ -1,12 +1,8 @@
 game_identifier,date,start_time,home_team,away_team,status,home_spread,away_spread,home_spread_odds_decimal,away_spread_odds_decimal,total_line_o,total_line_over_odds_decimal,total_line_under_odds_decimal,home_winning_odds_decimal,away_winning_odds_decimal
-2025-12-07_ORL@NY,2025-12-07,2025-12-07T17:10:00Z,New York Knicks,Orlando Magic,upcoming,-3.5,3.5,1.89,1.93,231.5,1.93,1.89,1.62,2.36
-2025-12-07_BOS@TOR,2025-12-07,2025-12-07T20:40:00Z,Toronto Raptors,Boston Celtics,upcoming,2.5,-2.5,1.87,1.95,226.5,1.91,1.91,2.14,1.74
-2025-12-07_DEN@CHA,2025-12-07,2025-12-07T23:10:00Z,Charlotte Hornets,Denver Nuggets,upcoming,10.5,-10.5,1.87,1.95,234.5,1.93,1.89,4.7,1.21
-2025-12-07_POR@MEM,2025-12-07,2025-12-07T23:10:00Z,Memphis Grizzlies,Portland Trail Blazers,upcoming,-1.5,1.5,1.95,1.87,233.5,1.91,1.91,1.87,1.95
-2025-12-08_GS@CHI,2025-12-08,2025-12-08T00:10:00Z,Chicago Bulls,Golden State Warriors,upcoming,1.5,-1.5,1.87,1.95,227.5,1.89,1.93,1.95,1.87
-2025-12-08_LAL@PHI,2025-12-08,2025-12-08T00:40:00Z,Philadelphia 76ers,Los Angeles Lakers,upcoming,4.5,-4.5,1.87,1.95,235.5,1.91,1.91,2.45,1.57
-2025-12-08_OKC@UTAH,2025-12-08,2025-12-08T01:10:00Z,Utah Jazz,Oklahoma City Thunder,upcoming,10.5,-10.5,1.87,1.95,237.5,1.91,1.91,4.8,1.2
-2025-12-09_MIA@ORL,2025-12-09,2025-12-09T23:00:00Z,Orlando Magic,Miami Heat,upcoming,-5.5,5.5,1.87,1.95,241.5,1.95,1.87,1.44,2.85
-2025-12-10_NY@TOR,2025-12-10,2025-12-10T01:30:00Z,Toronto Raptors,New York Knicks,upcoming,3.5,-3.5,1.87,1.95,232.5,1.91,1.91,2.24,1.68
+2025-12-09_SAC@IND,2025-12-09,2025-12-09T00:10:00Z,Indiana Pacers,Sacramento Kings,upcoming,-3.5,3.5,1.87,1.95,234.5,1.93,1.89,1.6,2.4
+2025-12-09_PHX@MIN,2025-12-09,2025-12-09T00:40:00Z,Minnesota Timberwolves,Phoenix Suns,upcoming,-9.5,9.5,1.91,1.91,226.5,1.89,1.93,1.25,4.1
+2025-12-09_SA@NO,2025-12-09,2025-12-09T01:10:00Z,New Orleans Pelicans,San Antonio Spurs,upcoming,9.5,-9.5,1.91,1.91,236.5,1.91,1.91,4.0,1.26
+2025-12-09_MIA@ORL,2025-12-09,2025-12-09T23:10:00Z,Orlando Magic,Miami Heat,upcoming,-1.5,1.5,1.98,1.85,238.5,1.95,1.87,1.89,1.93
+2025-12-10_NY@TOR,2025-12-10,2025-12-10T01:30:00Z,Toronto Raptors,New York Knicks,upcoming,3.5,-3.5,1.93,1.89,231.5,1.91,1.91,2.42,1.59
 2025-12-11_PHX@OKC,2025-12-11,2025-12-11T00:30:00Z,Oklahoma City Thunder,Phoenix Suns,upcoming,-15.5,15.5,1.87,1.95,224.5,1.91,1.91,1.08,8.5
-2025-12-11_SA@LAL,2025-12-11,2025-12-11T03:00:00Z,Los Angeles Lakers,San Antonio Spurs,upcoming,-3.5,3.5,1.87,1.95,234.5,1.87,1.95,1.6,2.4
+2025-12-11_SA@LAL,2025-12-11,2025-12-11T03:00:00Z,Los Angeles Lakers,San Antonio Spurs,upcoming,-3.5,3.5,1.87,1.95,234.5,1.87,1.95,1.59,2.42
