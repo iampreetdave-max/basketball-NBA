@@ -304,7 +304,7 @@ def calculate_spread_covered_predicted(row):
         away_spread_positive = abs(row['away_spread']) if pd.notna(row['away_spread']) else 0
         return 'TRUE' if predicted_margin >= away_spread_positive else 'FALSE'
 
-results_df['spreads_covered_predicted'] = results_df.apply(calculate_spread_covered_predicted, axis=1)
+results_df['spread_covered_predicted'] = results_df.apply(calculate_spread_covered_predicted, axis=1)
 
 # Add market_total_line (same as total_line_o)
 results_df['market_total_line'] = df['total_line_o'].values if 'total_line_o' in df.columns else None
