@@ -247,9 +247,6 @@ results_df['ou_predicted'] = np.where(
     None
 )
 
-# Over/Under actual (null initially, filled during validation)
-results_df['ou_actual'] = None
-
 # Odds
 results_df['home_win_odds'] = df['home_winning_odds_decimal'].values.round(2) if 'home_winning_odds_decimal' in df.columns else 0.0
 results_df['away_win_odds'] = df['away_winning_odds_decimal'].values.round(2) if 'away_winning_odds_decimal' in df.columns else 0.0
@@ -309,6 +306,21 @@ def calculate_spread_covered_predicted(row):
 
 results_df['spreads_covered_predicted'] = results_df.apply(calculate_spread_covered_predicted, axis=1)
 
+# Add market_total_line (same as total_line_o)
+results_df['market_total_line'] = df['total_line_o'].values if 'total_line_o' in df.columns else None
+
+# Rename odds columns
+results_df.rename(columns={
+    'home_spread_odds_decimal': 'home_spread_odds',
+    'away_spread_odds_decimal': 'away_spread_odds',
+    'total_line_over_odds_decimal': 'over_odds',
+    'total_line_under_odds_decimal': 'under_odds'
+}, inplace=True)
+
+# Add empty columns for validation (filled during validation process)
+results_df['spread_pnl'] = None
+results_df['spread_covered_actual'] = None
+
 # Reorder columns to match exact requested order
 final_columns = [
     'id', 'date', 'league', 'game_identifier', 'home_id', 'home_team', 'away_id', 'away_team',
@@ -316,15 +328,16 @@ final_columns = [
     'away_points_predicted', 'away_points_actual',
     'total_points_predicted', 'total_points_actual',
     'ml_prediction', 'ml_actual', 'ml_probability',
-    'ou_predicted', 'ou_actual',
     'home_win_odds', 'away_win_odds',
-    'home_spread', 'away_spread',
-    'home_spread_odds_decimal', 'away_spread_odds_decimal',
-    'total_line_o', 'total_line_over_odds_decimal', 'total_line_under_odds_decimal',
-    'spreads_covered_predicted',
     'ml_correct', 'ml_pnl',
-    'ou_correct', 'ou_pnl',
-    'ml_confidence', 'status', 'grade'
+    'ml_confidence', 'status', 'grade',
+    'market_total_line',
+    'ou_predicted', 'ou_correct', 'ou_pnl',
+    'home_spread', 'away_spread',
+    'home_spread_odds', 'away_spread_odds',
+    'over_odds', 'under_odds',
+    'spread_pnl',
+    'spread_covered_predicted', 'spread_covered_actual'
 ]
 
 results_df = results_df[final_columns]
@@ -390,7 +403,7 @@ print("\n📋 SAMPLE PREDICTIONS (first 10 games):")
 print("-"*80)
 display_cols = ['home_team', 'away_team', 'home_points_predicted', 'away_points_predicted', 
                 'total_points_predicted', 'ml_prediction', 'ml_probability', 'ml_confidence',
-                'ou_predicted', 'home_spread', 'away_spread', 'spreads_covered_predicted', 'status', 'grade']
+                'ou_predicted', 'home_spread', 'away_spread', 'spread_covered_predicted', 'status', 'grade']
 
 if 'ml_actual' in results_df.columns:
     display_cols.extend(['ml_actual', 'ml_correct', 'ml_pnl'])
