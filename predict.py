@@ -287,6 +287,28 @@ results_df['grade'] = results_df['ml_confidence'].apply(lambda x:
     'B' if x >= 95 else 'A' if x >= 75 else 'C' if x >= 35 else 'D'
 )
 
+# ============================================================================
+# SPREAD COVERAGE PREDICTION (NEW)
+# ============================================================================
+# Logic: margin >= spread means spread is covered
+# If Home Win: check if abs(margin) >= abs(home_spread)
+# If Away Win: check if abs(margin) >= abs(away_spread)
+
+def calculate_spread_covered_predicted(row):
+    """Calculate if spread is covered based on predictions"""
+    predicted_margin = abs(row['home_points_predicted'] - row['away_points_predicted'])
+    
+    if row['ml_prediction'] == 'Home Win':
+        # Home is predicted to win, check home spread
+        home_spread_positive = abs(row['home_spread']) if pd.notna(row['home_spread']) else 0
+        return 'TRUE' if predicted_margin >= home_spread_positive else 'FALSE'
+    else:
+        # Away is predicted to win, check away spread
+        away_spread_positive = abs(row['away_spread']) if pd.notna(row['away_spread']) else 0
+        return 'TRUE' if predicted_margin >= away_spread_positive else 'FALSE'
+
+results_df['spreads_covered_predicted'] = results_df.apply(calculate_spread_covered_predicted, axis=1)
+
 # Reorder columns to match exact requested order
 final_columns = [
     'id', 'date', 'league', 'game_identifier', 'home_id', 'home_team', 'away_id', 'away_team',
@@ -299,6 +321,7 @@ final_columns = [
     'home_spread', 'away_spread',
     'home_spread_odds_decimal', 'away_spread_odds_decimal',
     'total_line_o', 'total_line_over_odds_decimal', 'total_line_under_odds_decimal',
+    'spreads_covered_predicted',
     'ml_correct', 'ml_pnl',
     'ou_correct', 'ou_pnl',
     'ml_confidence', 'status', 'grade'
@@ -367,8 +390,7 @@ print("\n📋 SAMPLE PREDICTIONS (first 10 games):")
 print("-"*80)
 display_cols = ['home_team', 'away_team', 'home_points_predicted', 'away_points_predicted', 
                 'total_points_predicted', 'ml_prediction', 'ml_probability', 'ml_confidence',
-                'ou_predicted', 'status', 'grade', 'home_win_odds', 'away_win_odds',
-                'home_spread', 'away_spread', 'total_line_o']
+                'ou_predicted', 'home_spread', 'away_spread', 'spreads_covered_predicted', 'status', 'grade']
 
 if 'ml_actual' in results_df.columns:
     display_cols.extend(['ml_actual', 'ml_correct', 'ml_pnl'])
@@ -378,6 +400,3 @@ if 'ou_actual' in results_df.columns:
 
 print(results_df[display_cols].head(10).to_string(index=False))
 print("-"*80)
-
-
-
