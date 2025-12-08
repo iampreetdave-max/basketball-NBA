@@ -180,6 +180,40 @@ def calculate_ml_pnl(ml_correct, moneyline_odds):
         return None
 
 
+def calculate_ou_correct(predicted_ou, total_points_actual, market_total_line):
+    """
+    Calculate actual over/under outcome.
+    
+    Logic:
+    - If total_points_actual > market_total_line: return "OVER"
+    - If total_points_actual < market_total_line: return "UNDER"
+    
+    Args:
+        predicted_ou: str - "OVER" or "UNDER" (not used for calculation, just for validation)
+        total_points_actual: int - actual total points (home + away)
+        market_total_line: float - the market total line
+    
+    Returns:
+        str - "OVER" or "UNDER", None if data is missing
+    """
+    if total_points_actual is None or market_total_line is None:
+        return None
+    
+    try:
+        total = int(total_points_actual)
+        line = float(market_total_line)
+        
+        # Determine actual outcome
+        if total > line:
+            return "OVER"
+        elif total < line:
+            return "UNDER"
+        else:
+            return None  # Push scenario
+    except (ValueError, TypeError):
+        return None
+
+
 def determine_status(home_points_actual, away_points_actual):
     """
     Determine game status based on actual points.
@@ -207,13 +241,13 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     1. Read predictions CSV
     2. Read prematch features CSV to get match_ids
     3. Fetch actual game data from Sportradar
-    4. Calculate ml_actual, ml_correct, ml_pnl
+    4. Calculate ml_actual, ml_correct, ml_pnl, ou_correct
     5. Update status based on whether actual data exists
     6. Push to database
     """
     
     print("\n" + "="*100)
-    print("NBA VALIDATION WITH ACTUAL DATA FETCH")
+    print("NBA VALIDATION WITH ACTUAL DATA FETCH (ML + OU)")
     print("="*100)
     
     # ========================================================================
@@ -330,6 +364,7 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
         df_validation['home_points_actual'] + df_validation['away_points_actual']
     )
     
+    # ========== MONEYLINE CALCULATIONS ==========
     # Determine ML actual winner
     df_validation['ml_actual'] = df_validation.apply(
         lambda row: determine_ml_actual(row['home_points_actual'], row['away_points_actual']),
@@ -364,6 +399,20 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
         axis=1
     )
     
+    # ========== OVER/UNDER CALCULATIONS ==========
+    # Calculate OU outcome (OVER/UNDER) - this is what gets stored in database
+    df_validation['ou_correct'] = df_validation.apply(
+        lambda row: calculate_ou_correct(row['ou_predicted'], row['total_points_actual'], row['total_line_o']),
+        axis=1
+    )
+    
+    # Calculate OU correctness (1/0) for summary statistics only
+    df_validation['ou_correct_numeric'] = df_validation.apply(
+        lambda row: 1 if (row['ou_predicted'] is not None and row['ou_correct'] is not None 
+                         and str(row['ou_predicted']).strip().upper() == str(row['ou_correct']).strip().upper()) else 0,
+        axis=1
+    )
+    
     # Determine status based on actual points
     df_validation['status'] = df_validation.apply(
         lambda row: determine_status(row['home_points_actual'], row['away_points_actual']),
@@ -379,21 +428,37 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     print("="*100)
     
     total_with_data = df_validation['home_points_actual'].notna().sum()
-    correct_predictions = df_validation['ml_correct'].sum()
-    accuracy = (correct_predictions / total_with_data * 100) if total_with_data > 0 else 0
-    total_pnl = df_validation['ml_pnl'].sum()
+    
+    # ML Stats
+    correct_ml = df_validation['ml_correct'].sum()
+    accuracy_ml = (correct_ml / total_with_data * 100) if total_with_data > 0 else 0
+    total_ml_pnl = df_validation['ml_pnl'].sum()
+    
+    # OU Stats
+    correct_ou = df_validation['ou_correct_numeric'].sum()
+    accuracy_ou = (correct_ou / total_with_data * 100) if total_with_data > 0 else 0
+    
+    # Status Stats
     settled_count = (df_validation['status'] == 'SETTLED').sum()
     pending_count = (df_validation['status'] == 'PENDING').sum()
     
     print(f"  Total records: {len(df_validation)}")
     print(f"  With actual data: {total_with_data}")
-    print(f"  Correct predictions: {int(correct_predictions)}")
-    print(f"  Accuracy: {accuracy:.1f}%")
-    print(f"  Total P/L: ${total_pnl:+.2f}")
+    
+    print(f"\n  MONEYLINE RESULTS:")
+    print(f"    Correct predictions: {int(correct_ml)}")
+    print(f"    Accuracy: {accuracy_ml:.1f}%")
+    print(f"    Total P/L: ${total_ml_pnl:+.2f}")
     if total_with_data > 0:
-        print(f"  Avg P/L per bet: ${total_pnl / total_with_data:+.2f}")
-    print(f"  Status - SETTLED: {settled_count}")
-    print(f"  Status - PENDING: {pending_count}")
+        print(f"    Avg P/L per bet: ${total_ml_pnl / total_with_data:+.2f}")
+    
+    print(f"\n  OVER/UNDER RESULTS:")
+    print(f"    Correct predictions: {int(correct_ou)}")
+    print(f"    Accuracy: {accuracy_ou:.1f}%")
+    
+    print(f"\n  STATUS:")
+    print(f"    SETTLED: {settled_count}")
+    print(f"    PENDING: {pending_count}")
     
     # Show sample records
     print(f"\n[SAMPLE DATA] First 5 records with calculations:")
@@ -401,7 +466,8 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     
     sample_cols = [
         'game_identifier', 'ml_prediction', 'ml_actual', 'ml_correct',
-        'home_points_actual', 'away_points_actual', 'total_points_actual', 'ml_pnl', 'status'
+        'ou_predicted', 'ou_correct',
+        'home_points_actual', 'away_points_actual', 'total_points_actual', 'status'
     ]
     available_cols = [col for col in sample_cols if col in df_validation.columns]
     
@@ -422,6 +488,7 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
         'ml_actual',
         'ml_correct',
         'ml_pnl',
+        'ou_correct',
         'status'
     ]].copy()
     
@@ -465,6 +532,7 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
                 ml_actual = %s,
                 ml_correct = %s,
                 ml_pnl = %s,
+                ou_correct = %s,
                 status = %s
             WHERE game_identifier = %s
             """
@@ -474,8 +542,9 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
                 int(row['away_points_actual']) if pd.notna(row['away_points_actual']) else None,
                 int(row['total_points_actual']) if pd.notna(row['total_points_actual']) else None,
                 row['ml_actual'],
-                bool(int(row['ml_correct'])) if pd.notna(row['ml_correct']) else None,
+                int(row['ml_correct']) if pd.notna(row['ml_correct']) else None,
                 float(row['ml_pnl']) if pd.notna(row['ml_pnl']) else None,
+                row['ou_correct'],  # String: OVER, UNDER, or None
                 row['status'],
                 game_id
             ))
