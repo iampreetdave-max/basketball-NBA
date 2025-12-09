@@ -127,6 +127,50 @@ def calculate_ml_correct(predicted_winner, actual_winner):
     return 1 if pred_normalized == actual_normalized else 0
 
 
+def calculate_spread_covered_actual(home_points_actual, away_points_actual, ml_actual, home_spread, away_spread):
+    """
+    Calculate if the actual point differential covered the spread.
+    
+    Logic:
+    - Get absolute difference of actual home and away points
+    - Get the winning team's spread (absolute value)
+    - If point_diff >= team_spread: return 'true', else 'false'
+    
+    Args:
+        home_points_actual: int - home team actual points
+        away_points_actual: int - away team actual points
+        ml_actual: str - "Home Win" or "Away Win"
+        home_spread: float - home team spread
+        away_spread: float - away team spread
+    
+    Returns:
+        str - 'true' if spread covered, 'false' otherwise, None if data missing
+    """
+    if (pd.isna(home_points_actual) or pd.isna(away_points_actual) or 
+        ml_actual is None or pd.isna(home_spread) or pd.isna(away_spread)):
+        return None
+    
+    try:
+        h_pts = int(home_points_actual)
+        a_pts = int(away_points_actual)
+        
+        # Calculate point differential
+        point_diff = abs(h_pts - a_pts)
+        
+        # Get the spread for the winning team
+        if str(ml_actual).strip().upper() == "HOME WIN":
+            team_spread_abs = abs(float(home_spread))
+        elif str(ml_actual).strip().upper() == "AWAY WIN":
+            team_spread_abs = abs(float(away_spread))
+        else:
+            return None
+        
+        # Check if covered
+        return 'true' if point_diff >= team_spread_abs else 'false'
+    except (ValueError, TypeError):
+        return None
+
+
 def determine_ml_actual(home_points, away_points):
     """
     Determine actual moneyline winner from scores.
@@ -180,6 +224,55 @@ def calculate_ml_pnl(ml_correct, moneyline_odds):
         return None
 
 
+def calculate_spread_pnl(spread_covered_predicted, spread_covered_actual, ml_actual, home_spread_odds, away_spread_odds):
+    """
+    Calculate P/L on spread bet.
+    
+    Logic:
+    - If spread_covered_predicted == spread_covered_actual: profit = (winning_team_spread_odds * 1) - 1
+    - If not equal: loss = -1.0
+    
+    Args:
+        spread_covered_predicted: str - 'true' or 'false' (was spread covered in prediction)
+        spread_covered_actual: str - 'true' or 'false' (was spread actually covered)
+        ml_actual: str - "Home Win" or "Away Win"
+        home_spread_odds: float - odds for home spread
+        away_spread_odds: float - odds for away spread
+    
+    Returns:
+        float - rounded to 2 decimal places, or None if data missing
+    """
+    if (pd.isna(spread_covered_predicted) or pd.isna(spread_covered_actual) or 
+        ml_actual is None):
+        return None
+    
+    try:
+        # Normalize predicted and actual values for comparison
+        pred_normalized = str(spread_covered_predicted).strip().lower()
+        actual_normalized = str(spread_covered_actual).strip().lower()
+        
+        # Check if predictions match actual
+        if pred_normalized == actual_normalized:
+            # Get the odds for the winning team
+            if str(ml_actual).strip().upper() == "HOME WIN":
+                odds = float(home_spread_odds) if pd.notna(home_spread_odds) else None
+            elif str(ml_actual).strip().upper() == "AWAY WIN":
+                odds = float(away_spread_odds) if pd.notna(away_spread_odds) else None
+            else:
+                return None
+            
+            if odds is None or odds <= 0:
+                return None
+            
+            pnl = round((odds * 1) - 1, 2)
+        else:
+            pnl = -1.0
+        
+        return pnl
+    except (ValueError, TypeError):
+        return None
+
+
 def calculate_ou_correct(predicted_ou, total_points_actual, market_total_line):
     """
     Calculate actual over/under outcome.
@@ -214,6 +307,52 @@ def calculate_ou_correct(predicted_ou, total_points_actual, market_total_line):
         return None
 
 
+def calculate_ou_pnl(ou_predicted, ou_correct, over_odds, under_odds):
+    """
+    Calculate P/L on over/under bet.
+    
+    Logic:
+    - If ou_predicted == ou_correct: profit = (ou_odds * 1) - 1
+    - If not equal: loss = -1.0
+    
+    Args:
+        ou_predicted: str - "OVER" or "UNDER"
+        ou_correct: str - "OVER" or "UNDER" (actual outcome)
+        over_odds: float - odds for OVER
+        under_odds: float - odds for UNDER
+    
+    Returns:
+        float - rounded to 2 decimal places, or None if data missing
+    """
+    if ou_predicted is None or ou_correct is None:
+        return None
+    
+    try:
+        pred_normalized = str(ou_predicted).strip().upper()
+        correct_normalized = str(ou_correct).strip().upper()
+        
+        # Check if prediction matches actual
+        if pred_normalized == correct_normalized:
+            # Get the odds for the predicted side
+            if pred_normalized == "OVER":
+                odds = float(over_odds) if pd.notna(over_odds) else None
+            elif pred_normalized == "UNDER":
+                odds = float(under_odds) if pd.notna(under_odds) else None
+            else:
+                return None
+            
+            if odds is None or odds <= 0:
+                return None
+            
+            pnl = round((odds * 1) - 1, 2)
+        else:
+            pnl = -1.0
+        
+        return pnl
+    except (ValueError, TypeError):
+        return None
+
+
 def determine_status(home_points_actual, away_points_actual):
     """
     Determine game status based on actual points.
@@ -241,13 +380,13 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     1. Read predictions CSV
     2. Read prematch features CSV to get match_ids
     3. Fetch actual game data from Sportradar
-    4. Calculate ml_actual, ml_correct, ml_pnl, ou_correct
+    4. Calculate ml_actual, ml_correct, ml_pnl, ou_correct, spread_covered_actual, spread_pnl, ou_pnl
     5. Update status based on whether actual data exists
     6. Push to database
     """
     
     print("\n" + "="*100)
-    print("NBA VALIDATION WITH ACTUAL DATA FETCH (ML + OU)")
+    print("NBA VALIDATION WITH ACTUAL DATA FETCH (ML + OU + SPREAD)")
     print("="*100)
     
     # ========================================================================
@@ -399,6 +538,31 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
         axis=1
     )
     
+    # ========== SPREAD CALCULATIONS ==========
+    # Calculate spread covered actual
+    df_validation['spread_covered_actual'] = df_validation.apply(
+        lambda row: calculate_spread_covered_actual(
+            row['home_points_actual'], 
+            row['away_points_actual'],
+            row['ml_actual'],
+            row['home_spread'],
+            row['away_spread']
+        ),
+        axis=1
+    )
+    
+    # Calculate spread PnL
+    df_validation['spread_pnl'] = df_validation.apply(
+        lambda row: calculate_spread_pnl(
+            row['spread_covered_predicted'],
+            row['spread_covered_actual'],
+            row['ml_actual'],
+            row['home_spread_odds'],
+            row['away_spread_odds']
+        ),
+        axis=1
+    )
+    
     # ========== OVER/UNDER CALCULATIONS ==========
     # Calculate OU outcome (OVER/UNDER) - this is what gets stored in database
     df_validation['ou_correct'] = df_validation.apply(
@@ -410,6 +574,17 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     df_validation['ou_correct_numeric'] = df_validation.apply(
         lambda row: 1 if (row['ou_predicted'] is not None and row['ou_correct'] is not None 
                          and str(row['ou_predicted']).strip().upper() == str(row['ou_correct']).strip().upper()) else 0,
+        axis=1
+    )
+    
+    # Calculate OU PnL
+    df_validation['ou_pnl'] = df_validation.apply(
+        lambda row: calculate_ou_pnl(
+            row['ou_predicted'],
+            row['ou_correct'],
+            row['over_odds'],
+            row['under_odds']
+        ),
         axis=1
     )
     
@@ -434,9 +609,19 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     accuracy_ml = (correct_ml / total_with_data * 100) if total_with_data > 0 else 0
     total_ml_pnl = df_validation['ml_pnl'].sum()
     
+    # Spread Stats
+    spread_covered_correct = df_validation.apply(
+        lambda row: 1 if (pd.notna(row['spread_covered_actual']) and 
+                         str(row['spread_covered_predicted']).strip().lower() == str(row['spread_covered_actual']).strip().lower()) else 0,
+        axis=1
+    ).sum()
+    accuracy_spread = (spread_covered_correct / total_with_data * 100) if total_with_data > 0 else 0
+    total_spread_pnl = df_validation['spread_pnl'].sum()
+    
     # OU Stats
     correct_ou = df_validation['ou_correct_numeric'].sum()
     accuracy_ou = (correct_ou / total_with_data * 100) if total_with_data > 0 else 0
+    total_ou_pnl = df_validation['ou_pnl'].sum()
     
     # Status Stats
     settled_count = (df_validation['status'] == 'SETTLED').sum()
@@ -452,9 +637,19 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     if total_with_data > 0:
         print(f"    Avg P/L per bet: ${total_ml_pnl / total_with_data:+.2f}")
     
+    print(f"\n  SPREAD RESULTS:")
+    print(f"    Correct predictions: {int(spread_covered_correct)}")
+    print(f"    Accuracy: {accuracy_spread:.1f}%")
+    print(f"    Total P/L: ${total_spread_pnl:+.2f}")
+    if total_with_data > 0:
+        print(f"    Avg P/L per bet: ${total_spread_pnl / total_with_data:+.2f}")
+    
     print(f"\n  OVER/UNDER RESULTS:")
     print(f"    Correct predictions: {int(correct_ou)}")
     print(f"    Accuracy: {accuracy_ou:.1f}%")
+    print(f"    Total P/L: ${total_ou_pnl:+.2f}")
+    if total_with_data > 0:
+        print(f"    Avg P/L per bet: ${total_ou_pnl / total_with_data:+.2f}")
     
     print(f"\n  STATUS:")
     print(f"    SETTLED: {settled_count}")
@@ -465,8 +660,9 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     print("-"*100)
     
     sample_cols = [
-        'game_identifier', 'ml_prediction', 'ml_actual', 'ml_correct',
-        'ou_predicted', 'ou_correct',
+        'game_identifier', 'ml_prediction', 'ml_actual', 'ml_correct', 'ml_pnl',
+        'spread_covered_predicted', 'spread_covered_actual', 'spread_pnl',
+        'ou_predicted', 'ou_correct', 'ou_pnl',
         'home_points_actual', 'away_points_actual', 'total_points_actual', 'status'
     ]
     available_cols = [col for col in sample_cols if col in df_validation.columns]
@@ -488,7 +684,10 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
         'ml_actual',
         'ml_correct',
         'ml_pnl',
+        'spread_covered_actual',
+        'spread_pnl',
         'ou_correct',
+        'ou_pnl',
         'status'
     ]].copy()
     
@@ -532,7 +731,10 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
                 ml_actual = %s,
                 ml_correct = %s::boolean,
                 ml_pnl = %s,
+                spread_covered_actual = %s,
+                spread_pnl = %s,
                 ou_correct = %s,
+                ou_pnl = %s,
                 status = %s
             WHERE game_identifier = %s
             """
@@ -544,7 +746,10 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
                 row['ml_actual'],
                 int(row['ml_correct']) if pd.notna(row['ml_correct']) else None,
                 float(row['ml_pnl']) if pd.notna(row['ml_pnl']) else None,
-                row['ou_correct'],  # String: OVER, UNDER, or None
+                row['spread_covered_actual'],
+                float(row['spread_pnl']) if pd.notna(row['spread_pnl']) else None,
+                row['ou_correct'],
+                float(row['ou_pnl']) if pd.notna(row['ou_pnl']) else None,
                 row['status'],
                 game_id
             ))
