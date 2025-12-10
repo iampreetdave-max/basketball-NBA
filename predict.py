@@ -304,7 +304,7 @@ results_df['status'] = 'PENDING'
 
 # Grade based on confidence
 results_df['grade'] = results_df['ml_confidence'].apply(lambda x: 
-    'B' if x >= 95 else 'A' if x >= 75 else 'C' if x >= 35 else 'D'
+    'B' if x >= 95 else 'D' if x >= 75 else 'A' if x >= 35 else 'C'
 )
 
 # ============================================================================
@@ -436,3 +436,4 @@ if 'ou_actual' in results_df.columns:
 
 print(results_df[display_cols].head(10).to_string(index=False))
 print("-"*80)
+
