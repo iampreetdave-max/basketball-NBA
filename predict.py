@@ -161,6 +161,29 @@ print("\n[4/5] Making predictions...")
 
 pred_home = home_model.predict(X_all_scaled)
 pred_away = away_model.predict(X_all_scaled)
+
+# ============================================================================
+# HANDLE TIES: Add random 0-7 to the team with better odds (lower odds decimal)
+# ============================================================================
+tie_mask = np.abs(pred_home - pred_away) < 0.01  # Detect near-ties
+tie_indices = np.where(tie_mask)[0]
+
+if len(tie_indices) > 0:
+    print(f"  ⚠️  Detected {len(tie_indices)} tie predictions, applying random adjustment...")
+    
+    for idx in tie_indices:
+        home_odds = df.loc[idx, 'home_winning_odds_decimal']
+        away_odds = df.loc[idx, 'away_winning_odds_decimal']
+        random_points = np.random.uniform(0, 7)
+        
+        # Add random points to the team with better odds (lower odds decimal)
+        if home_odds < away_odds:
+            pred_home[idx] += random_points
+        else:
+            pred_away[idx] += random_points
+    
+    print(f"  ✓ Tie adjustments applied to {len(tie_indices)} games")
+
 pred_total = pred_home + pred_away
 pred_winner = (pred_home > pred_away).astype(int)
 pred_margin = pred_home - pred_away
