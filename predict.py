@@ -296,16 +296,70 @@ results_df['ou_correct'] = None
 # OU PnL (null initially, calculated during validation)
 results_df['ou_pnl'] = None
 
-# Confidence and grade
+# Confidence
 results_df['ml_confidence'] = pred_confidence.round(2)
 
 # Status (default PENDING for all predictions)
 results_df['status'] = 'PENDING'
 
-# Grade based on confidence
-results_df['grade'] = results_df['ml_confidence'].apply(lambda x: 
-    'B' if x >= 95 else 'D' if x >= 75 else 'A' if x >= 35 else 'C'
-)
+# ============================================================================
+# GRADING LOGIC - NEW (UPDATED)
+# ============================================================================
+def assign_grade(confidence, grade_type='ml'):
+    """
+    Assign grade based on ml_confidence and grade type
+    
+    grade (ML):
+        >= 85: A
+        69-84.99: C
+        52-68.99: B
+        < 52: D
+    
+    ou_grade (Over/Under):
+        >= 80: A
+        40-53.99: B
+        30-44.99: C
+        < 30: D
+    
+    spread_grade (Spread):
+        >= 80: A
+        50-79.99: B
+        35-49.99: C
+        < 35: D
+    """
+    if grade_type == 'ml':
+        if confidence >= 85:
+            return 'A'
+        elif confidence >= 69:
+            return 'C'
+        elif confidence >= 52:
+            return 'B'
+        else:
+            return 'D'
+    elif grade_type == 'ou':
+        if confidence >= 80:
+            return 'A'
+        elif confidence >= 40 and confidence < 54:
+            return 'B'
+        elif confidence >= 30 and confidence < 45:
+            return 'C'
+        else:
+            return 'D'
+    elif grade_type == 'spread':
+        if confidence >= 80:
+            return 'A'
+        elif confidence >= 50 and confidence < 80:
+            return 'B'
+        elif confidence >= 35 and confidence < 50:
+            return 'C'
+        else:
+            return 'D'
+    return 'D'
+
+# Apply grading to all three columns
+results_df['grade'] = results_df['ml_confidence'].apply(lambda x: assign_grade(x, 'ml'))
+results_df['ou_grade'] = results_df['ml_confidence'].apply(lambda x: assign_grade(x, 'ou'))
+results_df['spread_grade'] = results_df['ml_confidence'].apply(lambda x: assign_grade(x, 'spread'))
 
 # ============================================================================
 # SPREAD COVERAGE PREDICTION (NEW)
@@ -344,7 +398,7 @@ results_df.rename(columns={
 results_df['spread_pnl'] = None
 results_df['spread_covered_actual'] = None
 
-# Reorder columns to match exact requested order
+# Reorder columns to match exact requested order (UPDATED WITH NEW COLUMNS)
 final_columns = [
     'id', 'date', 'league', 'game_identifier', 'home_id', 'home_team', 'away_id', 'away_team',
     'home_points_predicted', 'home_points_actual',
@@ -353,7 +407,7 @@ final_columns = [
     'ml_prediction', 'ml_actual', 'ml_probability',
     'home_win_odds', 'away_win_odds',
     'ml_correct', 'ml_pnl',
-    'ml_confidence', 'status', 'grade',
+    'ml_confidence', 'grade', 'ou_grade', 'spread_grade', 'status',
     'market_total_line',
     'ou_predicted', 'ou_correct', 'ou_pnl',
     'home_spread', 'away_spread',
@@ -426,7 +480,8 @@ print("\n📋 SAMPLE PREDICTIONS (first 10 games):")
 print("-"*80)
 display_cols = ['home_team', 'away_team', 'home_points_predicted', 'away_points_predicted', 
                 'total_points_predicted', 'ml_prediction', 'ml_probability', 'ml_confidence',
-                'ou_predicted', 'home_spread', 'away_spread', 'spread_covered_predicted', 'status', 'grade']
+                'grade', 'ou_grade', 'spread_grade', 'ou_predicted', 'home_spread', 'away_spread', 
+                'spread_covered_predicted', 'status']
 
 if 'ml_actual' in results_df.columns:
     display_cols.extend(['ml_actual', 'ml_correct', 'ml_pnl'])
@@ -436,4 +491,3 @@ if 'ou_actual' in results_df.columns:
 
 print(results_df[display_cols].head(10).to_string(index=False))
 print("-"*80)
-
