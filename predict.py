@@ -362,24 +362,66 @@ results_df['ou_grade'] = results_df['ml_confidence'].apply(lambda x: assign_grad
 results_df['spread_grade'] = results_df['ml_confidence'].apply(lambda x: assign_grade(x, 'spread'))
 
 # ============================================================================
-# SPREAD COVERAGE PREDICTION (NEW)
+# SPREAD COVERAGE PREDICTION (FIXED - SIGNED VALUES)
 # ============================================================================
-# Logic: margin >= spread means spread is covered
-# If Home Win: check if abs(margin) >= abs(home_spread)
-# If Away Win: check if abs(margin) >= abs(away_spread)
+# Logic: Use SIGNED margin and SIGNED spread
+# margin = home_pts - away_pts (directional)
+# Spread is covered if: margin > home_spread
 
 def calculate_spread_covered_predicted(row):
-    """Calculate if spread is covered based on predictions"""
-    predicted_margin = abs(row['home_points_predicted'] - row['away_points_predicted'])
+    """
+    Calculate if predicted spread is covered using SIGNED values
     
-    if row['ml_prediction'] == 'Home Win':
-        # Home is predicted to win, check home spread
-        home_spread_positive = abs(row['home_spread']) if pd.notna(row['home_spread']) else 0
-        return 'TRUE' if predicted_margin >= home_spread_positive else 'FALSE'
+    Args:
+        row: DataFrame row with columns:
+            - home_points_predicted
+            - away_points_predicted  
+            - home_spread (SIGNED: negative for favorites, positive for underdogs)
+    
+    Returns:
+        'TRUE' if home covers, 'FALSE' if away covers, None if no spread data, 'PUSH' if exact
+    
+    Logic:
+        - home_spread = -5.5 means home favored by 5.5, must WIN BY MORE than 5.5
+        - home_spread = +8.5 means home underdog by 8.5, can lose by up to 8.5
+        - Formula: margin > -spread_value
+    
+    Examples:
+        home_spread = -5.5 (home favored by 5.5)
+        pred_home = 110, pred_away = 105
+        margin = 110 - 105 = 5
+        Does 5 > -(-5.5)? Does 5 > 5.5? NO → 'FALSE' (doesn't cover, needs >5.5)
+        
+        home_spread = -5.5 (home favored by 5.5)
+        pred_home = 112, pred_away = 105  
+        margin = 112 - 105 = 7
+        Does 7 > 5.5? YES → 'TRUE' (home covers)
+        
+        home_spread = +8.5 (home underdog by 8.5)
+        pred_home = 100, pred_away = 108
+        margin = 100 - 108 = -8
+        Does -8 > -(+8.5)? Does -8 > -8.5? YES → 'TRUE' (home covers, lost by <8.5)
+    """
+    
+    # Skip if no spread data
+    if pd.isna(row['home_spread']):
+        return None
+    
+    # Calculate SIGNED margin (home perspective)
+    # Positive = home ahead, Negative = away ahead
+    margin = row['home_points_predicted'] - row['away_points_predicted']
+    
+    # Get spread as float (preserves sign)
+    spread_value = float(row['home_spread'])
+    
+    # Compare: negate spread to get threshold home must beat
+    # margin > -spread_value means home covers
+    if margin > -spread_value:
+        return 'TRUE'   # Home covers the spread
+    elif margin < -spread_value:
+        return 'FALSE'  # Away covers the spread
     else:
-        # Away is predicted to win, check away spread
-        away_spread_positive = abs(row['away_spread']) if pd.notna(row['away_spread']) else 0
-        return 'TRUE' if predicted_margin >= away_spread_positive else 'FALSE'
+        return 'PUSH'   # Exact match (push)
 
 results_df['spread_covered_predicted'] = results_df.apply(calculate_spread_covered_predicted, axis=1)
 
@@ -491,4 +533,3 @@ if 'ou_actual' in results_df.columns:
 
 print(results_df[display_cols].head(10).to_string(index=False))
 print("-"*80)
-
