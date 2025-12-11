@@ -129,44 +129,58 @@ def calculate_ml_correct(predicted_winner, actual_winner):
 
 def calculate_spread_covered_actual(home_points_actual, away_points_actual, ml_actual, home_spread, away_spread):
     """
-    Calculate if the actual point differential covered the spread.
+    Calculate if the actual spread was covered using SIGNED values
     
-    Logic:
-    - Get absolute difference of actual home and away points
-    - Get the winning team's spread (absolute value)
-    - If point_diff >= team_spread: return 'true', else 'false'
+    Logic: margin > -spread_value
+    - margin = home_points_actual - away_points_actual (directional)
+    - spread_value = home_spread (signed: negative for favorites, positive for underdogs)
     
     Args:
         home_points_actual: int - home team actual points
         away_points_actual: int - away team actual points
-        ml_actual: str - "Home Win" or "Away Win"
-        home_spread: float - home team spread
-        away_spread: float - away team spread
+        ml_actual: str - "Home Win" or "Away Win" (not used in calculation)
+        home_spread: float - home team spread (SIGNED)
+        away_spread: float - away team spread (not used, kept for signature compatibility)
     
     Returns:
-        str - 'true' if spread covered, 'false' otherwise, None if data missing
+        str - 'TRUE' if spread covered, 'FALSE' if not covered, 'PUSH' if exact, None if data missing
+    
+    Examples:
+        home_spread = -5.5 (home favored by 5.5)
+        home = 110, away = 105, margin = 5
+        Is 5 > 5.5? NO → 'FALSE' (didn't cover)
+        
+        home_spread = -5.5 (home favored by 5.5)
+        home = 112, away = 105, margin = 7
+        Is 7 > 5.5? YES → 'TRUE' (covered)
+        
+        home_spread = +8.5 (home underdog by 8.5)
+        home = 100, away = 108, margin = -8
+        Is -8 > -8.5? YES → 'TRUE' (covered)
     """
     if (pd.isna(home_points_actual) or pd.isna(away_points_actual) or 
-        ml_actual is None or pd.isna(home_spread) or pd.isna(away_spread)):
+        pd.isna(home_spread)):
         return None
     
     try:
         h_pts = int(home_points_actual)
         a_pts = int(away_points_actual)
         
-        # Calculate point differential
-        point_diff = abs(h_pts - a_pts)
+        # Calculate SIGNED margin (home perspective)
+        # Positive = home ahead, Negative = away ahead
+        margin = h_pts - a_pts
         
-        # Get the spread for the winning team
-        if str(ml_actual).strip().upper() == "HOME WIN":
-            team_spread_abs = abs(float(home_spread))
-        elif str(ml_actual).strip().upper() == "AWAY WIN":
-            team_spread_abs = abs(float(away_spread))
+        # Get spread as float (preserves sign)
+        spread_value = float(home_spread)
+        
+        # Compare: margin > -spread_value
+        # This formula works for all cases (favorites, underdogs, pick'em)
+        if margin > -spread_value:
+            return 'TRUE'   # Home covers the spread
+        elif margin < -spread_value:
+            return 'FALSE'  # Away covers the spread
         else:
-            return None
-        
-        # Check if covered
-        return 'true' if point_diff >= team_spread_abs else 'false'
+            return 'PUSH'   # Exact match (push)
     except (ValueError, TypeError):
         return None
 
@@ -233,8 +247,8 @@ def calculate_spread_pnl(spread_covered_predicted, spread_covered_actual, ml_act
     - If not equal: loss = -1.0
     
     Args:
-        spread_covered_predicted: str - 'true' or 'false' (was spread covered in prediction)
-        spread_covered_actual: str - 'true' or 'false' (was spread actually covered)
+        spread_covered_predicted: str - 'TRUE' or 'FALSE' (was spread covered in prediction)
+        spread_covered_actual: str - 'TRUE' or 'FALSE' (was spread actually covered)
         ml_actual: str - "Home Win" or "Away Win"
         home_spread_odds: float - odds for home spread
         away_spread_odds: float - odds for away spread
@@ -248,8 +262,8 @@ def calculate_spread_pnl(spread_covered_predicted, spread_covered_actual, ml_act
     
     try:
         # Normalize predicted and actual values for comparison
-        pred_normalized = str(spread_covered_predicted).strip().lower()
-        actual_normalized = str(spread_covered_actual).strip().lower()
+        pred_normalized = str(spread_covered_predicted).strip().upper()
+        actual_normalized = str(spread_covered_actual).strip().upper()
         
         # Check if predictions match actual
         if pred_normalized == actual_normalized:
@@ -539,7 +553,7 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     )
     
     # ========== SPREAD CALCULATIONS ==========
-    # Calculate spread covered actual
+    # Calculate spread covered actual (FIXED - using SIGNED margin logic)
     df_validation['spread_covered_actual'] = df_validation.apply(
         lambda row: calculate_spread_covered_actual(
             row['home_points_actual'], 
@@ -612,7 +626,7 @@ def validate_with_actual_data(predictions_csv, prematch_csv):
     # Spread Stats
     spread_covered_correct = df_validation.apply(
         lambda row: 1 if (pd.notna(row['spread_covered_actual']) and 
-                         str(row['spread_covered_predicted']).strip().lower() == str(row['spread_covered_actual']).strip().lower()) else 0,
+                         str(row['spread_covered_predicted']).strip().upper() == str(row['spread_covered_actual']).strip().upper()) else 0,
         axis=1
     ).sum()
     accuracy_spread = (spread_covered_correct / total_with_data * 100) if total_with_data > 0 else 0
