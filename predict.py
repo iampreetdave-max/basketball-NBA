@@ -329,18 +329,18 @@ def assign_grade(confidence, grade_type='ml'):
     """
     if grade_type == 'ml':
         if confidence >= 85:
-            return 'A'
-        elif confidence >= 69:
-            return 'C'
-        elif confidence >= 52:
             return 'B'
-        else:
+        elif confidence >= 69:
             return 'D'
+        elif confidence >= 52:
+            return 'A'
+        else:
+            return 'C'
     elif grade_type == 'ou':
         if confidence >= 80:
-            return 'A'
-        elif confidence >= 40 and confidence < 54:
             return 'B'
+        elif confidence >= 40 and confidence < 54:
+            return 'A'
         elif confidence >= 30 and confidence < 45:
             return 'C'
         else:
@@ -491,3 +491,4 @@ if 'ou_actual' in results_df.columns:
 
 print(results_df[display_cols].head(10).to_string(index=False))
 print("-"*80)
+
