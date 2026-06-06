@@ -1,3 +1,4 @@
+import os
 import psycopg2
 import pandas as pd
 from psycopg2 import sql
@@ -8,7 +9,7 @@ DB_CONFIG = {
     'port': 5432,
     'database': 'postgres',
     'user': 'winbets',
-    'password': 'Constantinople@1900'
+    'password': os.environ.get('DB_PASSWORD', '')
 }
 
 TABLE_NAME = 'agility_nba_b1'
