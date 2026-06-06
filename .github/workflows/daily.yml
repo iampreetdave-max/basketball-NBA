@@ -46,6 +46,8 @@ jobs:
         run: |
           echo "🔍 Fetching today's NBA matches..."
           python Pre_Match.py
+        env:
+          ODDS_API_KEYS: ${{ secrets.ODDS_API_KEYS }}
         continue-on-error: false
       
       - name: Verify nba_prematch_features.csv
@@ -64,6 +66,8 @@ jobs:
         run: |
           echo "📊 Extracting DraftKings odds and features..."
           python Odds_Pre_Match.py
+        env:
+          ODDS_API_KEYS: ${{ secrets.ODDS_API_KEYS }}
         continue-on-error: false
       
       - name: Verify upcoming_nba_draftkings_odds.csv
