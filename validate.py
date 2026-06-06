@@ -1,3 +1,4 @@
+import os
 import requests
 import psycopg2
 import pandas as pd
@@ -14,19 +15,13 @@ DB_HOST = 'winbets-predictions.postgres.database.azure.com'
 DB_PORT = '5432'
 DB_NAME = 'postgres'
 DB_USER = 'winbets'
-DB_PASSWORD = 'Constantinople@1900'
+DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
 TABLE_NAME = 'agility_nba_b1'
 
 # ============================================================================
 # API CONFIGURATION (Same as PreMatchFeatureEngine)
 # ============================================================================
-API_KEYS = [
-    "fFdak1w9shF9hQVZOTaFEPBvRFw2ONSo8hfduCBI",
-    "yaVs9ag9ZV7B011YWcbOFuszgN5bdeTai5r8eVWi",
-    "7iXdsTMLsQpiFV6f1aWUak0BOoYrmuAf4YD99oVE",
-    "dfgSQXX31W4efJ2Nqq71E35eVbtRBth8BYtHRYPc",
-    "6vTdojNKZXdXhLLN9XgqlqqfXC87g3L3EoagQVAi"
-]
+API_KEYS = [k for k in os.environ.get("SPORTRADAR_API_KEYS", "").split(",") if k.strip()]
 BASE_URL = "https://api.sportradar.us/nba"
 ACCESS_LEVEL = "trial"
 VERSION = "v8"
