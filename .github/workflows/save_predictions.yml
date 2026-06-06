@@ -27,6 +27,7 @@ jobs:
         run: python save.py
         env:
           CSV_FILE: NBA_PREDICTIONS_ML.csv
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       
       - name: Log success
         if: success()
