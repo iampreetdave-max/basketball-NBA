@@ -33,6 +33,9 @@ jobs:
           ls -la  # Debug: show files in root
           python validate.py
           ls -la  # Debug: show files after running script
+        env:
+          SPORTRADAR_API_KEYS: ${{ secrets.SPORTRADAR_API_KEYS }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       
       - name: Commit and push results
         run: |
