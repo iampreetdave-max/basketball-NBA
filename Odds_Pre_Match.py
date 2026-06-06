@@ -13,13 +13,7 @@ import os
 # THE ODDS API CONFIGURATION
 # ============================================================================
 
-API_KEYS = [
-    "83dcdaff13977e39bc65141046c993f3",
-    "02a80c14ece71bed354b63915e3fb8b3",
-    "30d78032b75c0922de70de22f0337b91",
-    "8972d0f8f1c909b2791607ed1a29d6a5",
-    "7483e0df3726e14cdb152f580291f47d"
-]
+API_KEYS = [k for k in os.environ.get("ODDS_API_KEYS", "").split(",") if k.strip()]
 BASE_URL = "https://api.the-odds-api.com/v4"
 SPORT = "basketball_nba"
 RATE_LIMIT_THRESHOLD = 5
@@ -335,4 +329,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
